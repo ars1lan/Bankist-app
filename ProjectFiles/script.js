@@ -61,20 +61,6 @@ const inputLoanAmount = document.querySelector('.form__input--loan-amount');
 const inputCloseUsername = document.querySelector('.form__input--user');
 const inputClosePin = document.querySelector('.form__input--pin');
 
-//--------------------------Display All Movements to the Div
-const displayMovemnet = function (movement) {
-  containerMovements.innerHTML = '';
-  movement.forEach(function (mov, i) {
-    const type = mov > 0 ? 'deposit' : 'withdrawal';
-    const Html = `<div class="movements__row">
-    <div class="movements__type movements__type--${type}">${i + 1} ${type}</div>
-    <div class="movements__value">${mov}</div>
-  </div>`;
-    containerMovements.insertAdjacentHTML('afterbegin', Html);
-  });
-};
-displayMovemnet(account1.movements);
-
 //-------------------------------Create User Name
 const CreateUserName = function (accs) {
   accs.forEach(function (acc) {
@@ -86,6 +72,100 @@ const CreateUserName = function (accs) {
   });
 };
 CreateUserName(accounts);
+
+//--------------------------Display All Movements to the Div
+const displayMovemnet = function (movement) {
+  containerMovements.innerHTML = '';
+  movement.forEach(function (mov, i) {
+    const type = mov > 0 ? 'deposit' : 'withdrawal';
+    const Html = `<div class="movements__row">
+    <div class="movements__type movements__type--${type}">${i + 1} ${type}</div>
+    <div class="movements__value">${mov}€</div>
+  </div>`;
+    containerMovements.insertAdjacentHTML('afterbegin', Html);
+  });
+};
+
+//---------------------------Display Total Balance
+const displayTotalBalance = function (acc) {
+  acc.balance = acc.movements.reduce((acc, curr) => acc + curr, 0);
+  labelBalance.textContent = `${acc.balance}€`;
+};
+
+//-------------------------Display the summary in the Lower point
+const calcDisplaySummary = function (acc) {
+  const income = acc.movements
+    .filter(mov => mov > 0)
+    .reduce((acc, mov) => acc + mov, 0);
+  labelSumIn.textContent = `${income}€`;
+
+  const out = acc.movements
+    .filter(mov => mov < 0)
+    .reduce((acc, mov) => acc + mov, 0);
+  labelSumOut.textContent = `${Math.abs(out)}€`;
+
+  const interest = acc.movements
+    .filter(mov => mov > 0)
+    .map(mov => (mov * acc.interestRate) / 100)
+    .filter(mov => mov >= 1)
+    .reduce((acc, mov) => acc + mov, 0);
+  labelSumInterest.textContent = `${interest}€`;
+};
+
+//----------------------------Update all UI Elements
+const updateUi = function (acc) {
+  //diplay Movements
+  displayMovemnet(acc.movements);
+  //display Balance
+  displayTotalBalance(acc);
+  //display summary
+  calcDisplaySummary(acc);
+};
+//------------------------Login
+let currentAccount;
+btnLogin.addEventListener('click', function (e) {
+  e.preventDefault();
+  currentAccount = accounts.find(
+    acc => acc.username === inputLoginUsername.value
+  );
+  if (currentAccount?.pin === Number(inputLoginPin.value)) {
+    //display welcome Massage
+    labelWelcome.textContent = `Welcome Back, ${
+      currentAccount.owner.split(' ')[0]
+    }`;
+
+    //show content
+    containerApp.style.opacity = 100;
+
+    //clear input fields
+    inputLoginUsername.value = inputLoginPin.value = '';
+    inputLoginPin.blur();
+    inputLoginUsername.blur();
+
+    //update all Ui
+    updateUi(currentAccount);
+  }
+});
+
+//-----------------------Transfering Payments
+btnTransfer.addEventListener('click', function (e) {
+  e.preventDefault();
+  const ammount = Number(inputTransferAmount.value);
+  const recieverAcc = accounts.find(
+    acc => acc.username === inputTransferTo.value
+  );
+  inputTransferAmount.value = inputTransferTo.value = '';
+  if (
+    ammount > 0 &&
+    recieverAcc &&
+    ammount <= currentAccount.balance &&
+    recieverAcc?.username !== currentAccount.username
+  ) {
+    currentAccount.movements.push(-ammount);
+    recieverAcc.movements.push(ammount);
+    updateUi(currentAccount);
+  }
+});
 /////////////////////////////////////////////////
 /////////////////////////////////////////////////
 // LECTURES
@@ -96,7 +176,11 @@ CreateUserName(accounts);
 //   ['GBP', 'Pound sterling'],
 // ]);
 
-const movements = [200, 450, -400, 3000, -650, -130, 70, 1300];
-const withdrawals = movements.filter(mov => mov < 0);
-console.log(withdrawals);
+// const movements = [200, 450, -400, 3000, -650, -130, 70, 1300];
+// const withdrawals = movements.filter(mov => mov < 0);
+// const maxNum = movements.reduce(
+//   (acc, mov) => (acc > mov ? acc : (acc = mov)),
+//   movements.at(0)
+// );
+// console.log(maxNum);
 /////////////////////////////////////////////////
