@@ -74,9 +74,11 @@ const CreateUserName = function (accs) {
 CreateUserName(accounts);
 
 //--------------------------Display All Movements to the Div
-const displayMovemnet = function (movement) {
+const displayMovemnet = function (movement, sort = false) {
   containerMovements.innerHTML = '';
-  movement.forEach(function (mov, i) {
+  //implementing Sorting Technique
+  const movs = sort ? movement.slice().sort((a, b) => a - b) : movement;
+  movs.forEach(function (mov, i) {
     const type = mov > 0 ? 'deposit' : 'withdrawal';
     const Html = `<div class="movements__row">
     <div class="movements__type movements__type--${type}">${i + 1} ${type}</div>
@@ -197,6 +199,14 @@ btnClose.addEventListener('click', function (e) {
     containerApp.style.opacity = 0;
   }
   inputCloseUsername.value = inputClosePin.value = '';
+});
+
+//-----------------------------Sorting function
+let isSorted = false;
+btnSort.addEventListener('click', function (e) {
+  e.preventDefault();
+  displayMovemnet(currentAccount.movements, !isSorted);
+  isSorted = !isSorted;
 });
 /////////////////////////////////////////////////
 /////////////////////////////////////////////////
